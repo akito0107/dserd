@@ -31,7 +31,7 @@ func main() {
 	putTestEntity(ctx, client)
 
 	schemaInfos := make(map[string]*dserd.SchemaInfo)
-	loadKinds := []string{"User", "Post"}
+	loadKinds := []string{"User", "Post", "Comment"}
 
 	for _, k := range loadKinds {
 		si, err := dserd.LoadKind(ctx, client, k)
@@ -47,7 +47,7 @@ func main() {
 		}
 	}
 
-	graph, err := dserd.MakeGraph(schemaInfos)
+	graph, err := dserd.MakeGraph(schemaInfos, "Relation")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +55,6 @@ func main() {
 	str := graph.String()
 	fmt.Fprint(os.Stdout, str)
 }
-
 
 type User struct {
 	Name string
@@ -67,11 +66,22 @@ type Post struct {
 	User    *datastore.Key
 }
 
+type Comment struct {
+	Content string
+	Post    *datastore.Key
+}
+
 func putTestEntity(ctx context.Context, client *datastore.Client) {
 
 	k := datastore.NameKey("User", "aaa", nil)
 	u := &User{Name: "aaa"}
 	if _, err := client.Put(ctx, k, u); err != nil {
+		log.Printf("%+v", err)
+	}
+
+	k2 := datastore.NameKey("User", "bbb", nil)
+	u2 := &User{Name: "bbb"}
+	if _, err := client.Put(ctx, k2, u2); err != nil {
 		log.Printf("%+v", err)
 	}
 
@@ -82,6 +92,15 @@ func putTestEntity(ctx context.Context, client *datastore.Client) {
 		User:    k,
 	}
 	if _, err := client.Put(ctx, pk, p); err != nil {
+		log.Printf("%+v", err)
+	}
+
+	ck := datastore.NameKey("Comment", uuid.New().String(), k2)
+	c := &Comment{
+		Content: "ccc",
+		Post:    pk,
+	}
+	if _, err := client.Put(ctx, ck, c); err != nil {
 		log.Printf("%+v", err)
 	}
 }

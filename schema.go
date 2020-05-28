@@ -17,7 +17,7 @@ type Property struct {
 type SchemaInfo struct {
 	Kind      string
 	Props     []*Property
-	Ancestors []*SchemaInfo
+	Ancestors map[string]*SchemaInfo
 }
 
 func (s *SchemaInfo) HasAncestors() bool {
@@ -44,7 +44,7 @@ func (s *SchemaInfo) ResolveAncestor(ctx context.Context, client *datastore.Clie
 	query.Limit(1)
 
 	it := client.Run(ctx, query)
-	var ancestors []*SchemaInfo
+	ancestors := make(map[string]*SchemaInfo)
 
 	for {
 		res := NewAnyEntity(s.Kind)
@@ -59,7 +59,7 @@ func (s *SchemaInfo) ResolveAncestor(ctx context.Context, client *datastore.Clie
 		for _, p := range res.Properties {
 			if k, ok := p.(*datastore.Key); ok {
 				if ancestor, ok :=  schemas[k.Kind]; ok {
-					ancestors = append(ancestors, ancestor)
+					ancestors[k.Kind] = ancestor
 				}
 			}
 		}
