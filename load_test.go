@@ -57,12 +57,18 @@ func TestLoadKind(t *testing.T) {
 	}
 	putTestEntity(t, ctx, client)
 
-	t.Logf("\n")
+	schemaInfos := make(map[string]*SchemaInfo)
+	u, err := LoadKind(ctx, client, "User")
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaInfos["User"] = u
 
 	si, err := LoadKind(ctx, client, "Post")
 	if err != nil {
 		t.Fatal(err)
 	}
+	schemaInfos["Post"] = si
 
 	expected := &SchemaInfo{
 		Kind:      "Post",
@@ -86,5 +92,9 @@ func TestLoadKind(t *testing.T) {
 
 	if diff := cmp.Diff(si, expected); diff != "" {
 		t.Errorf("diff: %s", diff)
+	}
+
+	if err := si.ResolveAncestor(ctx, client, schemaInfos); err != nil {
+		t.Fatalf("%+v", err)
 	}
 }

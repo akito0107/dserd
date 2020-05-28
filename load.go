@@ -6,26 +6,7 @@ import (
 	"cloud.google.com/go/datastore"
 )
 
-type Property struct {
-	Name        string
-	Type        string
-	IsReference bool
-}
 
-type SchemaInfo struct {
-	Kind      string
-	Props     []*Property
-	Ancestors []*SchemaInfo
-}
-
-func (s *SchemaInfo) HasAncestors() bool {
-	for _, p := range s.Props {
-		if p.IsReference {
-			return true
-		}
-	}
-	return false
-}
 
 func LoadKind(ctx context.Context, client *datastore.Client, kind string) (*SchemaInfo, error) {
 	kindKey := datastore.NameKey("__kind__", kind, nil)

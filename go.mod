@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go/datastore v1.1.0
+	github.com/awalterschulze/gographviz v2.0.1+incompatible
 	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
