@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/datastore"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -19,6 +20,7 @@ type User struct {
 type Post struct {
 	Title   string
 	Content string
+	User    *datastore.Key
 }
 
 func putTestEntity(t *testing.T, ctx context.Context, client *datastore.Client) {
@@ -34,13 +36,14 @@ func putTestEntity(t *testing.T, ctx context.Context, client *datastore.Client) 
 	p := &Post{
 		Title:   "aaa",
 		Content: "bbb",
+		User:    k,
 	}
 	if _, err := client.Put(ctx, pk, p); err != nil {
 		t.Logf("%+v", err)
 	}
 }
 
-func TestEntityDumper(t *testing.T) {
+func TestLoadKind(t *testing.T) {
 	ctx := context.Background()
 
 	opts := []option.ClientOption{
@@ -56,14 +59,32 @@ func TestEntityDumper(t *testing.T) {
 
 	t.Logf("\n")
 
-	e, err := Load(ctx, client, "User")
+	si, err := LoadKind(ctx, client, "Post")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf(e.String())
-	e, err = Load(ctx, client, "Post")
-	if err != nil {
-		t.Fatal(err)
+
+	expected := &SchemaInfo{
+		Kind:      "Post",
+		Props:     []*Property{
+			{
+				Name: "Content",
+				Type: "STRING",
+			},
+			{
+				Name: "Title",
+				Type: "STRING",
+			},
+			{
+				Name: "User",
+				Type: "REFERENCE",
+				IsReference: true,
+			},
+		},
+		Ancestors: nil,
 	}
-	t.Logf(e.String())
+
+	if diff := cmp.Diff(si, expected); diff != "" {
+		t.Errorf("diff: %s", diff)
+	}
 }
